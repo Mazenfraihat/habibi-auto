@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — 786 Habibis Auto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --white:  #fafaf8;
+      --cream:  #f4f2ec;
+      --black:  #111110;
+      --gold:   #c9922a;
+      --gold-l: #f0c96b;
+      --mid:    #6b6b68;
+      --red:    #dc2626;
+      --green:  #166534;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN OVERLAY ── */
+    #loginOverlay {
+      position: fixed; inset: 0;
+      background: var(--black);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-box {
+      text-align: center;
+      padding: 48px 40px;
+      background: #1a1a18;
+      border: 1px solid rgba(201,146,42,0.2);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .login-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .login-sub {
+      font-size: 0.7rem;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .login-label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(240,201,107,0.7);
+      text-align: left;
+      margin-bottom: 6px;
+    }
+    .login-input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--white);
+      outline: none;
+      letter-spacing: 0.15em;
+      transition: border-color 0.2s;
+      margin-bottom: 16px;
+    }
+    .login-input:focus { border-color: var(--gold); }
+    .login-btn {
+      width: 100%;
+      background: var(--gold);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      padding: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-btn:hover { background: var(--gold-l); }
+    .login-error {
+      display: none;
+      color: #fca5a5;
+      font-size: 0.78rem;
+      margin-top: 10px;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+    .login-box.shake { animation: shake 0.4s ease; }
+
+    /* ── TOP BAR ── */
+    .admin-bar {
+      background: var(--black);
+      padding: 16px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(201,146,42,0.2);
+    }
+    .admin-bar-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .admin-bar-logo span { color: var(--gold); }
+    .admin-bar-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .bar-link {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .bar-link:hover { color: var(--white); }
+    .bar-logout {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--gold);
+      background: none;
+      border: 1px solid rgba(201,146,42,0.35);
+      border-radius: 999px;
+      padding: 6px 16px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, color 0.2s;
+    }
+    .bar-logout:hover { background: var(--gold); color: var(--white); }
+
+    /* ── LAYOUT ── */
+    .admin-layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 5% 80px;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--white);
+      border-radius: 10px;
+      border: 1px solid rgba(17,17,16,0.08);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(17,17,16,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .panel-count {
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--cream);
+      border: 1px solid rgba(17,17,16,0.1);
+      color: var(--mid);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .panel-body { padding: 24px; }
+
+    /* ── FORM ── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label {
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+    .form-label .req { color: var(--gold); margin-left: 2px; }
+    .form-input, .form-select, .form-textarea {
+      background: var(--cream);
+      border: 1.5px solid rgba(17,17,16,0.1);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--black);
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--gold);
+      background: #fdf9f3;
+    }
+    .form-input::placeholder { color: rgba(107,107,104,0.5); }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .form-row .form-group { margin-bottom: 0; }
+
+    /* Photo upload */
+    .photo-upload {
+      border: 2px dashed rgba(201,146,42,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      background: var(--cream);
+    }
+    .photo-upload:hover { border-color: var(--gold); background: #fdf9f3; }
+    .photo-upload input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .photo-upload-icon { font-size: 1.6rem; margin-bottom: 6px; }
+    .photo-upload-text {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--mid);
+    }
+    .photo-upload-text strong { color: var(--gold); }
+    .photo-preview {
+      display: none;
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    /* Specs grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .spec-pair {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: var(--cream);
+      border: 1.5px solid rgba(17,17,16,0.08);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .spec-pair-label-input {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: none;
+      border: none;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+    }
+    .spec-pair-label-input::placeholder { color: rgba(201,146,42,0.4); }
+    .spec-pair-value-input {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--black);
+      background: none;
+      border: none;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+    }
+    .spec-pair-value-input::placeholder { color: rgba(107,107,104,0.45); }
+
+    /* Tag input */
+    .tag-input-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: var(--cream);
+      border: 1.5px solid rgba(17,17,16,0.1);
+      border-radius: 6px;
+      padding: 8px 10px;
+      cursor: text;
+      min-height: 44px;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+    .tag-input-wrap:focus-within { border-color: var(--gold); }
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+    .tag-chip button {
+      background: none; border: none; cursor: pointer;
+      color: #b45309; font-size: 0.75rem; line-height: 1;
+      padding: 0 1px;
+    }
+    .tag-chip button:hover { color: var(--red); }
+    .tag-real-input {
+      flex: 1;
+      min-width: 120px;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      color: var(--black);
+    }
+    .tag-real-input::placeholder { color: rgba(107,107,104,0.45); }
+    .tag-hint {
+      font-size: 0.65rem;
+      color: var(--mid);
+      margin-top: 4px;
+    }
+
+    /* Badge selector */
+    .badge-options {
+      display: flex;
+      gap: 10px;
+    }
+    .badge-opt {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid rgba(17,17,16,0.1);
+      border-radius: 6px;
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--cream);
+    }
+    .badge-opt input[type="radio"] { display: none; }
+    .badge-opt.selected-hot { border-color: var(--black); background: var(--black); }
+    .badge-opt.selected-hot .badge-opt-label { color: var(--white); }
+    .badge-opt.selected-perf { border-color: var(--gold); background: var(--gold); }
+    .badge-opt.selected-perf .badge-opt-label { color: var(--white); }
+    .badge-opt-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--mid);
+      pointer-events: none;
+    }
+
+    /* Submit */
+    .btn-add {
+      width: 100%;
+      background: var(--black);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      padding: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-add:hover { background: var(--gold); transform: translateY(-1px); }
+    .btn-add.success { background: var(--green); }
+
+    /* ── CAR LIST ── */
+    .car-list { display: flex; flex-direction: column; gap: 12px; }
+    .car-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      background: var(--cream);
+      border: 1px solid rgba(17,17,16,0.07);
+      border-radius: 8px;
+      transition: box-shadow 0.2s;
+    }
+    .car-item:hover { box-shadow: 0 4px 16px rgba(17,17,16,0.07); }
+    .car-item-thumb {
+      width: 72px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 5px;
+      flex-shrink: 0;
+      background: #ddd;
+    }
+    .car-item-info { flex: 1; min-width: 0; }
+    .car-item-make {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2px;
+    }
+    .car-item-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .car-item-price {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--mid);
+      margin-top: 2px;
+    }
+    .btn-delete {
+      flex-shrink: 0;
+      background: none;
+      border: 1.5px solid rgba(220,38,38,0.2);
+      color: var(--red);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-delete:hover { background: var(--red); color: white; border-color: var(--red); }
+
+    .empty-list {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--mid);
+      font-size: 0.88rem;
+    }
+    .empty-list span { display: block; font-size: 2rem; margin-bottom: 8px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .specs-grid { grid-template-columns: 1fr; }
+      .badge-options { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── LOGIN OVERLAY ── -->
+  <div id="loginOverlay">
+    <div class="login-box" id="loginBox">
+      <div class="login-logo">786 Habibis Auto LLC</div>
+      <div class="login-sub">Admin Access</div>
+      <label class="login-label" for="pwdInput">Password</label>
+      <input class="login-input" type="password" id="pwdInput" placeholder="Enter password" />
+      <button class="login-btn" onclick="doLogin()">Enter Admin</button>
+      <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+    </div>
+  </div>
+
+  <!-- ── TOP BAR ── -->
+  <div class="admin-bar">
+    <div class="admin-bar-logo">786 Habibis Auto <span>· Admin</span></div>
+    <div class="admin-bar-actions">
+      <a href="inventory.html" class="bar-link" target="_blank">View Inventory ↗</a>
+      <a href="habibi-auto.html" class="bar-link" target="_blank">View Site ↗</a>
+      <button class="bar-logout" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <!-- ── MAIN LAYOUT ── -->
+  <div class="admin-layout">
+
+    <!-- LEFT: Add Car Form -->
+    <div class="panel" id="addPanel">
+      <div class="panel-header">
+        <div class="panel-title">Add New Car</div>
+      </div>
+      <div class="panel-body">
+
+        <!-- Photo -->
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Car Photo <span class="req">*</span></label>
+          <div class="photo-upload" id="photoUploadZone">
+            <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(this)" />
+            <div class="photo-upload-icon">📷</div>
+            <div class="photo-upload-text">
+              <strong>Click to upload</strong> or drag & drop<br>
+              JPG, PNG — any size
+            </div>
+          </div>
+          <img id="photoPreview" class="photo-preview" alt="Preview" />
+        </div>
+
+        <!-- Badge -->
+        <div class="form-group">
+          <label class="form-label">Badge</label>
+          <div style="display:flex;gap:10px;margin-bottom:8px" class="badge-options">
+            <label class="badge-opt selected-hot" id="optHot">
+              <input type="radio" name="badgeType" value="hot" checked onchange="updateBadgeUI()" />
+              <span class="badge-opt-label">Black Badge</span>
+            </label>
+            <label class="badge-opt" id="optPerf">
+              <input type="radio" name="badgeType" value="perf" onchange="updateBadgeUI()" />
+              <span class="badge-opt-label">Gold Badge</span>
+            </label>
+          </div>
+          <input class="form-input" type="text" id="badgeText" placeholder='e.g. Hot Deal 🔥 or Performance Beast' value="Hot Deal 🔥" />
+        </div>
+
+        <!-- Make + Year -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Make <span class="req">*</span></label>
+            <input class="form-input" type="text" id="carMake" placeholder="e.g. Toyota" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year <span class="req">*</span></label>
+            <input class="form-input" type="text" id="carYear" placeholder="e.g. 2023" maxlength="4" />
+          </div>
+        </div>
+
+        <!-- Car Name -->
+        <div class="form-group">
+          <label class="form-label">Car Name <span class="req">*</span></label>
+          <input class="form-input" type="text" id="carName" placeholder="e.g. Camry XSE Sedan 4D" />
+        </div>
+
+        <!-- Specs -->
+        <div class="form-group" style="margin-bottom:6px">
+          <label class="form-label">Specs (up to 4) — click label to edit</label>
+        </div>
+        <div class="specs-grid">
+          <div class="spec-pair">
+            <input class="spec-pair-label-input" type="text" id="sl1" value="Mileage" placeholder="Label" />
+            <input class="spec-pair-value-input" type="text" id="sv1" placeholder="e.g. 24,000 mi" />
+          </div>
+          <div class="spec-pair">
+            <input class="spec-pair-label-input" type="text" id="sl2" value="Color" placeholder="Label" />
+            <input class="spec-pair-value-input" type="text" id="sv2" placeholder="e.g. Midnight Black" />
+          </div>
+          <div class="spec-pair">
+            <input class="spec-pair-label-input" type="text" id="sl3" value="Location" placeholder="Label" />
+            <input class="spec-pair-value-input" type="text" id="sv3" placeholder="e.g. Fontana, CA" />
+          </div>
+          <div class="spec-pair">
+            <input class="spec-pair-label-input" type="text" id="sl4" value="Title" placeholder="Label" />
+            <input class="spec-pair-value-input" type="text" id="sv4" placeholder="e.g. Clean / Salvage" />
+          </div>
+        </div>
+
+        <!-- Highlights -->
+        <div class="form-group">
+          <label class="form-label">Highlights / Features</label>
+          <div class="tag-input-wrap" id="tagWrap" onclick="document.getElementById('tagInput').focus()">
+            <input class="tag-real-input" type="text" id="tagInput" placeholder="Type a feature, press Enter…"
+              onkeydown="handleTagKey(event)" />
+          </div>
+          <div class="tag-hint">Press Enter or comma to add a tag. Click × to remove.</div>
+        </div>
+
+        <!-- Price -->
+        <div class="form-group">
+          <label class="form-label">Asking Price ($) <span class="req">*</span></label>
+          <input class="form-input" type="text" id="carPrice" placeholder="e.g. 18,500" />
+        </div>
+
+        <button class="btn-add" id="addBtn" onclick="addCar()">+ Add to Inventory</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Car List -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Current Inventory</div>
+          <div class="panel-count" id="listCount">0 cars</div>
+        </div>
+        <div class="panel-body">
+          <div class="car-list" id="carList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── PASSWORD ──
+    const PASSWORD = 'habibis786001';
+
+    function doLogin() {
+      const val = document.getElementById('pwdInput').value;
+      if (val === PASSWORD) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        renderList();
+      } else {
+        const box = document.getElementById('loginBox');
+        document.getElementById('loginError').style.display = 'block';
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+        document.getElementById('pwdInput').value = '';
+      }
+    }
+    document.getElementById('pwdInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    function logout() {
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('pwdInput').value = '';
+      document.getElementById('loginError').style.display = 'none';
+    }
+
+    // ── DATA ──
+    const DEFAULT_CARS = [
+      { id:1, photo:'elantra.jpg', badge:'Hot Deal 🔥', badgeType:'hot', make:'Hyundai', year:'2025',
+        name:'Elantra SEL Sedan 4D',
+        specs:[{label:'Mileage',value:'17,400 mi'},{label:'Color',value:'Clean White'},{label:'Location',value:'Fontana, CA'},{label:'Title',value:'Salvage'}],
+        highlights:['Excellent Gas Mileage','Modern Safety Features','Smog Done','No Airbags Deployed'], price:'15,500' },
+      { id:2, photo:'porsche.jpg', badge:'Performance Beast', badgeType:'perf', make:'Porsche', year:'2014',
+        name:'Panamera Turbo S Sedan 4D',
+        specs:[{label:'Engine',value:'4.8L Twin-Turbo V8'},{label:'Horsepower',value:'570 HP'},{label:'0–60 mph',value:'~3.6 sec'},{label:'Title',value:'Salvage'}],
+        highlights:['AWD + PDK','Ceramic Brakes','PASM Suspension','Porsche Beverly Hills Serviced'], price:'29,999' }
+    ];
+
+    function getCars() {
+      const s = localStorage.getItem('habibi_cars');
+      if (s) return JSON.parse(s);
+      localStorage.setItem('habibi_cars', JSON.stringify(DEFAULT_CARS));
+      return DEFAULT_CARS;
+    }
+    function saveCars(cars) {
+      localStorage.setItem('habibi_cars', JSON.stringify(cars));
+    }
+
+    // ── TAG INPUT ──
+    let currentTags = [];
+
+    function renderTags() {
+      const wrap = document.getElementById('tagWrap');
+      const input = document.getElementById('tagInput');
+      // Remove old chips
+      wrap.querySelectorAll('.tag-chip').forEach(c => c.remove());
+      currentTags.forEach((tag, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = `${tag} <button type="button" onclick="removeTag(${i})">×</button>`;
+        wrap.insertBefore(chip, input);
+      });
+    }
+
+    function handleTagKey(e) {
+      const input = document.getElementById('tagInput');
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = input.value.trim().replace(/,$/, '');
+        if (val) { currentTags.push(val); input.value = ''; renderTags(); }
+      }
+      if (e.key === 'Backspace' && !input.value && currentTags.length) {
+        currentTags.pop(); renderTags();
+      }
+    }
+
+    function removeTag(i) {
+      currentTags.splice(i, 1);
+      renderTags();
+    }
+
+    // ── BADGE UI ──
+    function updateBadgeUI() {
+      const type = document.querySelector('input[name="badgeType"]:checked').value;
+      document.getElementById('optHot').className  = 'badge-opt' + (type === 'hot'  ? ' selected-hot'  : '');
+      document.getElementById('optPerf').className = 'badge-opt' + (type === 'perf' ? ' selected-perf' : '');
+    }
+
+    // ── PHOTO ──
+    let photoData = '';
+
+    function handlePhoto(input) {
+      const file = input.files[0];
+      if (!file) return;
+      // Compress via canvas
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 900, maxH = 600;
+          let w = img.width, h = img.height;
+          if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+          if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          photoData = canvas.toDataURL('image/jpeg', 0.78);
+          const preview = document.getElementById('photoPreview');
+          preview.src = photoData;
+          preview.style.display = 'block';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ── ADD CAR ──
+    function addCar() {
+      const make  = document.getElementById('carMake').value.trim();
+      const year  = document.getElementById('carYear').value.trim();
+      const name  = document.getElementById('carName').value.trim();
+      const price = document.getElementById('carPrice').value.trim();
+
+      if (!make || !year || !name || !price) {
+        alert('Please fill in Make, Year, Car Name, and Price.');
+        return;
+      }
+      if (!photoData) {
+        alert('Please upload a photo for the car.');
+        return;
+      }
+
+      const specs = [];
+      for (let i = 1; i <= 4; i++) {
+        const label = document.getElementById('sl' + i).value.trim();
+        const value = document.getElementById('sv' + i).value.trim();
+        if (label && value) specs.push({ label, value });
+      }
+
+      const badgeType = document.querySelector('input[name="badgeType"]:checked').value;
+      const badge     = document.getElementById('badgeText').value.trim() || (badgeType === 'hot' ? 'Hot Deal 🔥' : 'Performance Beast');
+
+      const car = {
+        id: Date.now(),
+        photo: photoData,
+        badge, badgeType, make, year, name, specs,
+        highlights: [...currentTags],
+        price
+      };
+
+      const cars = getCars();
+      cars.push(car);
+      saveCars(cars);
+
+      // Success feedback
+      const btn = document.getElementById('addBtn');
+      btn.textContent = 'Car Added ✓';
+      btn.classList.add('success');
+      setTimeout(() => {
+        btn.textContent = '+ Add to Inventory';
+        btn.classList.remove('success');
+      }, 2500);
+
+      // Reset form
+      document.getElementById('carMake').value  = '';
+      document.getElementById('carYear').value  = '';
+      document.getElementById('carName').value  = '';
+      document.getElementById('carPrice').value = '';
+      document.getElementById('badgeText').value = 'Hot Deal 🔥';
+      document.querySelector('input[name="badgeType"][value="hot"]').checked = true;
+      updateBadgeUI();
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('sv' + i).value = '';
+      }
+      currentTags = [];
+      renderTags();
+      photoData = '';
+      document.getElementById('photoPreview').style.display = 'none';
+      document.getElementById('photoInput').value = '';
+
+      renderList();
+    }
+
+    // ── CAR LIST ──
+    function renderList() {
+      const cars = getCars();
+      const list = document.getElementById('carList');
+      document.getElementById('listCount').textContent = cars.length + (cars.length === 1 ? ' car' : ' cars');
+
+      if (cars.length === 0) {
+        list.innerHTML = '<div class="empty-list"><span>🚗</span>No cars yet. Add your first one!</div>';
+        return;
+      }
+
+      list.innerHTML = cars.map(car => `
+        <div class="car-item">
+          <img class="car-item-thumb" src="${car.photo}" alt="${car.name}" />
+          <div class="car-item-info">
+            <div class="car-item-make">${car.make} · ${car.year}</div>
+            <div class="car-item-name">${car.name}</div>
+            <div class="car-item-price">$${car.price}</div>
+          </div>
+          <button class="btn-delete" onclick="deleteCar(${car.id})">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function deleteCar(id) {
+      if (!confirm('Remove this car from inventory?')) return;
+      const cars = getCars().filter(c => c.id !== id);
+      saveCars(cars);
+      renderList();
+    }
+
+    // Init list (hidden until logged in, but pre-render for after login)
+    renderList();
+  </script>
+</body>
+</html>

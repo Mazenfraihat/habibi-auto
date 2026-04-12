@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory — 786 Habibis Auto LLC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── RESET & TOKENS ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --white:      #fafaf8;
+      --cream:      #f4f2ec;
+      --black:      #111110;
+      --gold:       #c9922a;
+      --gold-light: #f0c96b;
+      --mid:        #6b6b68;
+      --nav-h:      72px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 18px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 28px;
+      height: 2px;
+      background: var(--gold);
+      flex-shrink: 0;
+    }
+    .gold-divider {
+      width: 48px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 2px;
+      margin: 18px 0 24px;
+    }
+
+    /* ── NAV ── */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      z-index: 1000;
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      background: rgba(244, 242, 236, 0.82);
+      border-bottom: 1px solid rgba(201, 146, 42, 0.18);
+      display: flex;
+      align-items: center;
+      padding: 0 5%;
+    }
+    .nav-inner {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo a { text-decoration: none; }
+    .nav-logo .logo-main {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--black);
+      display: block;
+      line-height: 1.2;
+    }
+    .nav-logo .logo-sub {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      display: block;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--black);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links .nav-active a { color: var(--gold); }
+    .nav-links .btn-contact a {
+      background: var(--black);
+      color: var(--white);
+      padding: 8px 20px;
+      border-radius: 999px;
+      transition: background 0.25s, color 0.25s;
+    }
+    .nav-links .btn-contact a:hover {
+      background: var(--gold);
+      color: var(--white);
+    }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+      background: none;
+      border: none;
+      z-index: 1100;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--black);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      background: var(--cream);
+      padding: calc(var(--nav-h) + 56px) 5% 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-header-bg {
+      position: absolute;
+      top: 50%;
+      right: -2%;
+      transform: translateY(-50%);
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(80px, 14vw, 180px);
+      letter-spacing: 0.06em;
+      color: var(--black);
+      opacity: 0.04;
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+    }
+    .page-header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .page-header h1 {
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .page-header p {
+      font-size: 0.95rem;
+      color: var(--mid);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+    .inventory-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--black);
+      color: var(--white);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+    }
+    .inventory-count-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+    }
+
+    /* ── INVENTORY GRID ── */
+    .inventory-page {
+      background: var(--white);
+      padding: 64px 5% 100px;
+    }
+    .inventory-page-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .car-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 36px;
+    }
+
+    /* ── CAR CARD ── */
+    .car-card {
+      background: var(--white);
+      border: 1px solid rgba(17,17,16,0.09);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s;
+    }
+    .car-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 28px 64px rgba(17, 17, 16, 0.13);
+    }
+    .card-img {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      background: #e8e6e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-img svg {
+      opacity: 0.3;
+      width: 86px;
+      height: 52px;
+    }
+    .card-img-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mid);
+      font-weight: 500;
+    }
+    .card-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 5px 12px;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .badge-hot  { background: var(--black); color: var(--white); }
+    .badge-perf { background: var(--gold);  color: var(--white); }
+
+    .card-body { padding: 26px 24px 28px; }
+
+    .card-make {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 5px;
+    }
+    .card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--black);
+      margin-bottom: 20px;
+    }
+    .card-specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 20px;
+      padding: 16px;
+      background: var(--cream);
+      border-radius: 6px;
+      margin-bottom: 18px;
+    }
+    .spec-item { display: flex; flex-direction: column; gap: 2px; }
+    .spec-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+    .spec-value {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--black);
+    }
+    .card-highlights {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .highlight-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.67rem;
+      font-weight: 600;
+      border-radius: 3px;
+      letter-spacing: 0.02em;
+    }
+    .salvage-note {
+      border-left: 3px solid var(--gold);
+      padding: 10px 14px;
+      background: #fdf9f3;
+      font-size: 0.77rem;
+      line-height: 1.65;
+      color: var(--mid);
+      margin-bottom: 22px;
+      border-radius: 0 5px 5px 0;
+    }
+    .card-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .card-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--black);
+    }
+    .btn-inquire {
+      display: inline-block;
+      background: var(--black);
+      color: var(--white);
+      padding: 10px 24px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.25s, transform 0.2s;
+    }
+    .btn-inquire:hover { background: var(--gold); transform: translateY(-1px); }
+
+    /* ── NO MORE CARS BANNER ── */
+    .more-coming {
+      text-align: center;
+      padding: 56px 24px;
+      border: 2px dashed rgba(201, 146, 42, 0.25);
+      border-radius: 10px;
+      margin-top: 36px;
+    }
+    .more-coming-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+    .more-coming h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 8px;
+    }
+    .more-coming p {
+      font-size: 0.85rem;
+      color: var(--mid);
+      max-width: 340px;
+      margin: 0 auto 20px;
+      line-height: 1.6;
+    }
+    .btn-outline-sm {
+      display: inline-block;
+      border: 1.5px solid var(--black);
+      color: var(--black);
+      padding: 9px 22px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.22s, color 0.22s;
+    }
+    .btn-outline-sm:hover { background: var(--black); color: var(--white); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #0c0c0b;
+      padding: 28px 5%;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-logo .logo-main {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--white);
+    }
+    .footer-logo .logo-sub {
+      font-size: 0.62rem;
+      color: rgba(240, 201, 107, 0.5);
+      letter-spacing: 0.1em;
+      display: block;
+      margin-top: 2px;
+    }
+    .footer-copy {
+      font-size: 0.72rem;
+      color: rgba(250, 250, 248, 0.3);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: var(--nav-h);
+        left: 0; right: 0;
+        background: rgba(244, 242, 236, 0.97);
+        backdrop-filter: blur(18px);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        padding: 16px 5% 24px;
+        border-bottom: 1px solid rgba(201, 146, 42, 0.18);
+        width: 100%;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links li {
+        width: 100%;
+        border-bottom: 1px solid rgba(17,17,16,0.06);
+      }
+      .nav-links li:last-child { border-bottom: none; }
+      .nav-links a { display: block; padding: 12px 0; font-size: 0.95rem; }
+      .nav-links .btn-contact a { display: inline-block; margin-top: 8px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <nav id="nav">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <a href="habibi-auto.html">
+          <span class="logo-main">786 Habibis Auto LLC</span>
+          <span class="logo-sub">Fontana, CA &middot; Est. 2024</span>
+        </a>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="habibi-auto.html">Home</a></li>
+        <li class="nav-active"><a href="inventory.html">Inventory</a></li>
+        <li><a href="habibi-auto.html#about">About</a></li>
+        <li class="btn-contact"><a href="habibi-auto.html#contact">Contact Us</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── PAGE HEADER ── -->
+  <header class="page-header">
+    <div class="page-header-bg" aria-hidden="true">INVENTORY</div>
+    <div class="page-header-inner">
+      <div class="inventory-count fade-up" style="animation-delay:0.05s">
+        <span class="inventory-count-dot"></span>
+        <span id="carCount">2</span> Vehicles Available
+      </div>
+      <div class="section-label fade-up" style="animation-delay:0.1s">786 Habibis Auto LLC</div>
+      <h1 class="fade-up" style="animation-delay:0.18s">Full Inventory</h1>
+      <div style="width:48px;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;margin:14px 0 18px;" class="fade-up" style="animation-delay:0.24s"></div>
+      <p class="fade-up" style="animation-delay:0.28s">Every vehicle listed here is personally inspected and priced transparently. Full history and photos available on request.</p>
+    </div>
+  </header>
+
+  <!-- ── INVENTORY GRID ── -->
+  <main class="inventory-page">
+    <div class="inventory-page-inner">
+      <div id="carGrid" class="car-grid"></div>
+      <div class="more-coming" id="moreComing">
+        <div class="more-coming-icon">🚗</div>
+        <h3>More Cars Coming Soon</h3>
+        <p>New inventory is added regularly. Contact us to be notified when new vehicles arrive.</p>
+        <a href="habibi-auto.html#contact" class="btn-outline-sm">Get Notified</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-main">786 Habibis Auto LLC</span>
+        <span class="logo-sub">Fontana, CA &middot; Est. 2024</span>
+      </div>
+      <span class="footer-copy">&copy; 2024 786 Habibis Auto LLC. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    // ── Hamburger ──
+    const hamburger = document.getElementById('hamburger');
+    const navLinks  = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        navLinks.classList.remove('open');
+      });
+    });
+
+    // ── Default Cars (shown until admin adds/removes) ──
+    const DEFAULT_CARS = [
+      {
+        id: 1,
+        photo: 'elantra.jpg',
+        badge: 'Hot Deal 🔥',
+        badgeType: 'hot',
+        make: 'Hyundai',
+        year: '2025',
+        name: 'Elantra SEL Sedan 4D',
+        specs: [
+          { label: 'Mileage',   value: '17,400 mi'   },
+          { label: 'Color',     value: 'Clean White'  },
+          { label: 'Location',  value: 'Fontana, CA'  },
+          { label: 'Title',     value: 'Salvage'      }
+        ],
+        highlights: ['Excellent Gas Mileage','Modern Safety Features','Smog Done','No Airbags Deployed'],
+        price: '15,500'
+      },
+      {
+        id: 2,
+        photo: 'porsche.jpg',
+        badge: 'Performance Beast',
+        badgeType: 'perf',
+        make: 'Porsche',
+        year: '2014',
+        name: 'Panamera Turbo S Sedan 4D',
+        specs: [
+          { label: 'Engine',     value: '4.8L Twin-Turbo V8' },
+          { label: 'Horsepower', value: '570 HP'             },
+          { label: '0–60 mph',   value: '~3.6 sec'           },
+          { label: 'Title',      value: 'Salvage'            }
+        ],
+        highlights: ['AWD + PDK','Ceramic Brakes','PASM Suspension','Porsche Beverly Hills Serviced'],
+        price: '29,999'
+      }
+    ];
+
+    function getCars() {
+      const stored = localStorage.getItem('habibi_cars');
+      if (stored) return JSON.parse(stored);
+      // First visit — seed defaults
+      localStorage.setItem('habibi_cars', JSON.stringify(DEFAULT_CARS));
+      return DEFAULT_CARS;
+    }
+
+    function buildCard(car) {
+      const badgeClass = car.badgeType === 'hot' ? 'badge-hot' : 'badge-perf';
+      const specsHTML = car.specs.map(s =>
+        `<div class="spec-item"><span class="spec-label">${s.label}</span><span class="spec-value">${s.value}</span></div>`
+      ).join('');
+      const tagsHTML = car.highlights.map(h => `<span class="highlight-tag">${h}</span>`).join('');
+      return `
+        <article class="car-card">
+          <div class="card-img">
+            <img src="${car.photo}" alt="${car.make} ${car.name}" />
+            <span class="card-badge ${badgeClass}">${car.badge}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-make">${car.make} &middot; ${car.year}</div>
+            <h2 class="card-name">${car.name}</h2>
+            <div class="card-specs">${specsHTML}</div>
+            <div class="card-highlights">${tagsHTML}</div>
+            <div class="card-price-row">
+              <div class="card-price">$${car.price}</div>
+              <a href="habibi-auto.html#contact" class="btn-inquire">Inquire</a>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function render() {
+      const cars = getCars();
+      const grid = document.getElementById('carGrid');
+      grid.innerHTML = cars.map(buildCard).join('');
+      document.getElementById('carCount').textContent = cars.length;
+      document.getElementById('moreComing').style.display = cars.length === 0 ? 'block' : 'block';
+    }
+
+    render();
+  </script>
+</body>
+</html>
