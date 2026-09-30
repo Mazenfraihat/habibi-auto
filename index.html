@@ -517,6 +517,12 @@
       background: var(--mid);
       display: inline-block;
     }
+    .preview-status {
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--mid);
+    }
     .inventory-cta {
       text-align: center;
       margin-top: 48px;
@@ -1064,8 +1070,6 @@
             <label for="f-car">Car Interest</label>
             <select id="f-car">
               <option value="" disabled selected>Select a vehicle…</option>
-              <option value="elantra">2025 Hyundai Elantra SEL — $15,500</option>
-              <option value="panamera">2014 Porsche Panamera Turbo S — $29,999</option>
               <option value="other">Other / General Inquiry</option>
             </select>
           </div>
@@ -1090,6 +1094,9 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
     // ── Hamburger ──
     const hamburger = document.getElementById('hamburger');
@@ -1108,60 +1115,85 @@
       });
     });
 
-    // ── Inventory Preview ──
-    (function() {
-      const DEFAULT_CARS = [
-        { id:1, photo:'elantra.jpg', badge:'Hot Deal 🔥', badgeType:'hot', make:'Hyundai', year:'2025', name:'Elantra SEL Sedan 4D',
-          specs:[{label:'Mileage',value:'17,400 mi'},{label:'Color',value:'Clean White'},{label:'Location',value:'Fontana, CA'},{label:'Title',value:'Salvage'}],
-          highlights:[], price:'15,500' },
-        { id:2, photo:'porsche.jpg', badge:'Performance Beast', badgeType:'perf', make:'Porsche', year:'2014', name:'Panamera Turbo S Sedan 4D',
-          specs:[{label:'Engine',value:'4.8L Twin-Turbo V8'},{label:'Horsepower',value:'570 HP'},{label:'0–60 mph',value:'~3.6 sec'},{label:'Title',value:'Salvage'}],
-          highlights:[], price:'29,999' }
-      ];
-      const stored = localStorage.getItem('habibi_cars');
-      const cars = stored ? JSON.parse(stored) : DEFAULT_CARS;
-      if (!stored) localStorage.setItem('habibi_cars', JSON.stringify(DEFAULT_CARS));
-      const preview = cars.slice(0, 2);
+    // ── Inventory Preview + Car Interest options ──
+    (async function() {
       const grid = document.getElementById('previewGrid');
-      if (grid) {
-        grid.innerHTML = preview.map(car => {
-          const badgeClass = car.badgeType === 'hot' ? 'badge-hot' : 'badge-perf';
-          const meta = car.specs.slice(0,3).map((s,i,a) =>
-            `<span>${s.value}</span>${i < a.length-1 ? '<span class="preview-dot"></span>' : ''}`
-          ).join('');
-          return `
-            <article class="car-card preview-card">
-              <div class="card-img">
-                <img src="${car.photo}" alt="${car.make} ${car.name}" />
-                <span class="card-badge ${badgeClass}">${car.badge}</span>
-              </div>
-              <div class="card-body">
-                <div class="card-make">${car.make} &middot; ${car.year}</div>
-                <h3 class="card-name">${car.name}</h3>
-                <div class="preview-meta">${meta}</div>
-                <div class="card-price-row">
-                  <div class="card-price">$${car.price}</div>
-                  <a href="inventory.html" class="btn-inquire">View Details</a>
-                </div>
-              </div>
-            </article>`;
-        }).join('');
+      let cars;
+      try {
+        cars = await fetchCars();
+      } catch (err) {
+        console.error('Failed to load inventory', err);
+        grid.innerHTML = '<p class="preview-status">Inventory is temporarily unavailable. Please call or message us.</p>';
+        return;
       }
+
+      // Car Interest dropdown: one option per car, then "Other"
+      const select = document.getElementById('f-car');
+      const other  = select.querySelector('option[value="other"]');
+      cars.forEach(car => {
+        const opt = document.createElement('option');
+        opt.value = car.id;
+        opt.textContent = `${car.year} ${car.make} ${car.name} — $${car.price}`;
+        select.insertBefore(opt, other);
+      });
+
+      grid.innerHTML = cars.slice(0, 2).map(car => {
+        const badgeClass = car.badgeType === 'hot' ? 'badge-hot' : 'badge-perf';
+        const meta = car.specs.slice(0,3).map((s,i,a) =>
+          `<span>${esc(s.value)}</span>${i < a.length-1 ? '<span class="preview-dot"></span>' : ''}`
+        ).join('');
+        return `
+          <article class="car-card preview-card">
+            <div class="card-img">
+              <img src="${esc(car.photo)}" alt="${esc(car.make)} ${esc(car.name)}" />
+              <span class="card-badge ${badgeClass}">${esc(car.badge)}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-make">${esc(car.make)} &middot; ${esc(car.year)}</div>
+              <h3 class="card-name">${esc(car.name)}</h3>
+              <div class="preview-meta">${meta}</div>
+              <div class="card-price-row">
+                <div class="card-price">$${esc(car.price)}</div>
+                <a href="inventory.html" class="btn-inquire">View Details</a>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
     })();
 
     // ── Contact Form ──
-    function handleContact(e) {
+    async function handleContact(e) {
       e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      btn.textContent = 'Message Sent ✓';
-      btn.classList.add('sent');
+      const form = e.target;
+      const btn  = document.getElementById('submitBtn');
+      const car  = document.getElementById('f-car');
+      btn.textContent = 'Sending…';
       btn.disabled = true;
 
+      const { error } = await sb.from('contact_messages').insert({
+        name:         document.getElementById('f-name').value.trim(),
+        phone:        document.getElementById('f-phone').value.trim() || null,
+        car_interest: car.value ? car.options[car.selectedIndex].textContent : null,
+        message:      document.getElementById('f-message').value.trim() || null
+      });
+
+      if (error) {
+        console.error('Failed to send message', error);
+        btn.textContent = 'Failed — please call or email us';
+        setTimeout(() => {
+          btn.textContent = 'Send Message';
+          btn.disabled = false;
+        }, 4000);
+        return;
+      }
+
+      btn.textContent = 'Message Sent ✓';
+      btn.classList.add('sent');
       setTimeout(() => {
         btn.textContent = 'Send Message';
         btn.classList.remove('sent');
         btn.disabled = false;
-        e.target.reset();
+        form.reset();
       }, 3000);
     }
   </script>

@@ -83,6 +83,7 @@
       margin-bottom: 16px;
     }
     .login-input:focus { border-color: var(--gold); }
+    #emailInput { letter-spacing: normal; }
     .login-btn {
       width: 100%;
       background: var(--gold);
@@ -493,10 +494,12 @@
     <div class="login-box" id="loginBox">
       <div class="login-logo">786 Habibis Auto LLC</div>
       <div class="login-sub">Admin Access</div>
+      <label class="login-label" for="emailInput">Email</label>
+      <input class="login-input" type="email" id="emailInput" placeholder="you@example.com" autocomplete="username" />
       <label class="login-label" for="pwdInput">Password</label>
-      <input class="login-input" type="password" id="pwdInput" placeholder="Enter password" />
-      <button class="login-btn" onclick="doLogin()">Enter Admin</button>
-      <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+      <input class="login-input" type="password" id="pwdInput" placeholder="Enter password" autocomplete="current-password" />
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Enter Admin</button>
+      <div class="login-error" id="loginError">Incorrect email or password. Try again.</div>
     </div>
   </div>
 
@@ -505,7 +508,7 @@
     <div class="admin-bar-logo">786 Habibis Auto <span>· Admin</span></div>
     <div class="admin-bar-actions">
       <a href="inventory.html" class="bar-link" target="_blank">View Inventory ↗</a>
-      <a href="habibi-auto.html" class="bar-link" target="_blank">View Site ↗</a>
+      <a href="index.html" class="bar-link" target="_blank">View Site ↗</a>
       <button class="bar-logout" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -626,54 +629,58 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-    // ── PASSWORD ──
-    const PASSWORD = 'habibis786001';
-
-    function doLogin() {
-      const val = document.getElementById('pwdInput').value;
-      if (val === PASSWORD) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        renderList();
-      } else {
-        const box = document.getElementById('loginBox');
-        document.getElementById('loginError').style.display = 'block';
-        box.classList.remove('shake');
-        void box.offsetWidth;
-        box.classList.add('shake');
-        document.getElementById('pwdInput').value = '';
-      }
+    // ── AUTH (Supabase) ──
+    function showLoginError(msg) {
+      const box = document.getElementById('loginBox');
+      const err = document.getElementById('loginError');
+      err.textContent = msg;
+      err.style.display = 'block';
+      box.classList.remove('shake');
+      void box.offsetWidth;
+      box.classList.add('shake');
     }
-    document.getElementById('pwdInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') doLogin();
-    });
 
-    function logout() {
+    // Hide the overlay only for signed-in users listed in admin_users
+    async function enterIfAdmin() {
+      const { data, error } = await sb.rpc('is_admin');
+      if (error || !data) {
+        await sb.auth.signOut();
+        showLoginError(error ? 'Could not verify access. Try again.' : 'This account is not an admin.');
+        return;
+      }
+      document.getElementById('loginOverlay').style.display = 'none';
+      renderList();
+    }
+
+    async function doLogin() {
+      const email    = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('pwdInput').value;
+      const btn      = document.getElementById('loginBtn');
+      btn.disabled = true;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      btn.disabled = false;
+      document.getElementById('pwdInput').value = '';
+      if (error) {
+        showLoginError('Incorrect email or password. Try again.');
+        return;
+      }
+      await enterIfAdmin();
+    }
+    ['emailInput', 'pwdInput'].forEach(id =>
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+      })
+    );
+
+    async function logout() {
+      await sb.auth.signOut();
       document.getElementById('loginOverlay').style.display = 'flex';
       document.getElementById('pwdInput').value = '';
       document.getElementById('loginError').style.display = 'none';
-    }
-
-    // ── DATA ──
-    const DEFAULT_CARS = [
-      { id:1, photo:'elantra.jpg', badge:'Hot Deal 🔥', badgeType:'hot', make:'Hyundai', year:'2025',
-        name:'Elantra SEL Sedan 4D',
-        specs:[{label:'Mileage',value:'17,400 mi'},{label:'Color',value:'Clean White'},{label:'Location',value:'Fontana, CA'},{label:'Title',value:'Salvage'}],
-        highlights:['Excellent Gas Mileage','Modern Safety Features','Smog Done','No Airbags Deployed'], price:'15,500' },
-      { id:2, photo:'porsche.jpg', badge:'Performance Beast', badgeType:'perf', make:'Porsche', year:'2014',
-        name:'Panamera Turbo S Sedan 4D',
-        specs:[{label:'Engine',value:'4.8L Twin-Turbo V8'},{label:'Horsepower',value:'570 HP'},{label:'0–60 mph',value:'~3.6 sec'},{label:'Title',value:'Salvage'}],
-        highlights:['AWD + PDK','Ceramic Brakes','PASM Suspension','Porsche Beverly Hills Serviced'], price:'29,999' }
-    ];
-
-    function getCars() {
-      const s = localStorage.getItem('habibi_cars');
-      if (s) return JSON.parse(s);
-      localStorage.setItem('habibi_cars', JSON.stringify(DEFAULT_CARS));
-      return DEFAULT_CARS;
-    }
-    function saveCars(cars) {
-      localStorage.setItem('habibi_cars', JSON.stringify(cars));
     }
 
     // ── TAG INPUT ──
@@ -687,7 +694,7 @@
       currentTags.forEach((tag, i) => {
         const chip = document.createElement('span');
         chip.className = 'tag-chip';
-        chip.innerHTML = `${tag} <button type="button" onclick="removeTag(${i})">×</button>`;
+        chip.innerHTML = `${esc(tag)} <button type="button" onclick="removeTag(${i})">×</button>`;
         wrap.insertBefore(chip, input);
       });
     }
@@ -717,8 +724,7 @@
     }
 
     // ── PHOTO ──
-    let photoData = '';
-
+    let photoBlob = null;
     function handlePhoto(input) {
       const file = input.files[0];
       if (!file) return;
@@ -727,17 +733,19 @@
       reader.onload = e => {
         const img = new Image();
         img.onload = () => {
-          const maxW = 900, maxH = 600;
+          const maxW = 1600, maxH = 1067;
           let w = img.width, h = img.height;
           if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
           if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
           const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          photoData = canvas.toDataURL('image/jpeg', 0.78);
-          const preview = document.getElementById('photoPreview');
-          preview.src = photoData;
-          preview.style.display = 'block';
+          canvas.toBlob(blob => {
+            photoBlob = blob;
+            const preview = document.getElementById('photoPreview');
+            preview.src = URL.createObjectURL(blob);
+            preview.style.display = 'block';
+          }, 'image/jpeg', 0.82);
         };
         img.src = e.target.result;
       };
@@ -745,7 +753,7 @@
     }
 
     // ── ADD CAR ──
-    function addCar() {
+    async function addCar() {
       const make  = document.getElementById('carMake').value.trim();
       const year  = document.getElementById('carYear').value.trim();
       const name  = document.getElementById('carName').value.trim();
@@ -755,7 +763,7 @@
         alert('Please fill in Make, Year, Car Name, and Price.');
         return;
       }
-      if (!photoData) {
+      if (!photoBlob) {
         alert('Please upload a photo for the car.');
         return;
       }
@@ -770,20 +778,42 @@
       const badgeType = document.querySelector('input[name="badgeType"]:checked').value;
       const badge     = document.getElementById('badgeText').value.trim() || (badgeType === 'hot' ? 'Hot Deal 🔥' : 'Performance Beast');
 
-      const car = {
-        id: Date.now(),
-        photo: photoData,
-        badge, badgeType, make, year, name, specs,
-        highlights: [...currentTags],
-        price
-      };
+      const btn = document.getElementById('addBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
 
-      const cars = getCars();
-      cars.push(car);
-      saveCars(cars);
+      // 1. Upload photo to Storage
+      const photoPath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error: uploadError } = await sb.storage.from(PHOTO_BUCKET)
+        .upload(photoPath, photoBlob, { contentType: 'image/jpeg' });
+      if (uploadError) {
+        console.error(uploadError);
+        alert('Photo upload failed: ' + uploadError.message);
+        btn.disabled = false;
+        btn.textContent = '+ Add to Inventory';
+        return;
+      }
+      const photoUrl = sb.storage.from(PHOTO_BUCKET).getPublicUrl(photoPath).data.publicUrl;
+
+      // 2. Insert the car row
+      const { error } = await sb.from('cars').insert({
+        make, year, name, price, badge,
+        badge_type: badgeType,
+        specs,
+        highlights: [...currentTags],
+        photo_url: photoUrl,
+        photo_path: photoPath
+      });
+      btn.disabled = false;
+      if (error) {
+        console.error(error);
+        await sb.storage.from(PHOTO_BUCKET).remove([photoPath]);
+        alert('Could not save car: ' + error.message);
+        btn.textContent = '+ Add to Inventory';
+        return;
+      }
 
       // Success feedback
-      const btn = document.getElementById('addBtn');
       btn.textContent = 'Car Added ✓';
       btn.classList.add('success');
       setTimeout(() => {
@@ -804,7 +834,7 @@
       }
       currentTags = [];
       renderTags();
-      photoData = '';
+      photoBlob = null;
       document.getElementById('photoPreview').style.display = 'none';
       document.getElementById('photoInput').value = '';
 
@@ -812,9 +842,18 @@
     }
 
     // ── CAR LIST ──
-    function renderList() {
-      const cars = getCars();
+    let listedCars = [];
+
+    async function renderList() {
       const list = document.getElementById('carList');
+      try {
+        listedCars = await fetchCars();
+      } catch (err) {
+        console.error(err);
+        list.innerHTML = '<div class="empty-list"><span>⚠️</span>Could not load inventory.</div>';
+        return;
+      }
+      const cars = listedCars;
       document.getElementById('listCount').textContent = cars.length + (cars.length === 1 ? ' car' : ' cars');
 
       if (cars.length === 0) {
@@ -824,26 +863,37 @@
 
       list.innerHTML = cars.map(car => `
         <div class="car-item">
-          <img class="car-item-thumb" src="${car.photo}" alt="${car.name}" />
+          <img class="car-item-thumb" src="${esc(car.photo)}" alt="${esc(car.name)}" />
           <div class="car-item-info">
-            <div class="car-item-make">${car.make} · ${car.year}</div>
-            <div class="car-item-name">${car.name}</div>
-            <div class="car-item-price">$${car.price}</div>
+            <div class="car-item-make">${esc(car.make)} · ${esc(car.year)}</div>
+            <div class="car-item-name">${esc(car.name)}</div>
+            <div class="car-item-price">$${esc(car.price)}</div>
           </div>
           <button class="btn-delete" onclick="deleteCar(${car.id})">Delete</button>
         </div>
       `).join('');
     }
 
-    function deleteCar(id) {
+    async function deleteCar(id) {
       if (!confirm('Remove this car from inventory?')) return;
-      const cars = getCars().filter(c => c.id !== id);
-      saveCars(cars);
+      const car = listedCars.find(c => c.id === id);
+      const { error } = await sb.from('cars').delete().eq('id', id);
+      if (error) {
+        console.error(error);
+        alert('Could not delete car: ' + error.message);
+        return;
+      }
+      // Bundled images (elantra.jpg, …) have no storage path
+      if (car && car.photoPath) {
+        await sb.storage.from(PHOTO_BUCKET).remove([car.photoPath]);
+      }
       renderList();
     }
 
-    // Init list (hidden until logged in, but pre-render for after login)
-    renderList();
+    // Skip the login screen if a Supabase session is already stored
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) enterIfAdmin();
+    });
   </script>
 </body>
 </html>
