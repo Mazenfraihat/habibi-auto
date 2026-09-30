@@ -226,6 +226,13 @@
       gap: 36px;
     }
 
+    .grid-status {
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--mid);
+    }
+
     /* ── CAR CARD ── */
     .car-card {
       background: var(--white);
@@ -483,7 +490,7 @@
   <nav id="nav">
     <div class="nav-inner">
       <div class="nav-logo">
-        <a href="habibi-auto.html">
+        <a href="index.html">
           <span class="logo-main">786 Habibis Auto LLC</span>
           <span class="logo-sub">Fontana, CA &middot; Est. 2024</span>
         </a>
@@ -492,10 +499,10 @@
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links" id="navLinks">
-        <li><a href="habibi-auto.html">Home</a></li>
+        <li><a href="index.html">Home</a></li>
         <li class="nav-active"><a href="inventory.html">Inventory</a></li>
-        <li><a href="habibi-auto.html#about">About</a></li>
-        <li class="btn-contact"><a href="habibi-auto.html#contact">Contact Us</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li class="btn-contact"><a href="index.html#contact">Contact Us</a></li>
       </ul>
     </div>
   </nav>
@@ -506,7 +513,7 @@
     <div class="page-header-inner">
       <div class="inventory-count fade-up" style="animation-delay:0.05s">
         <span class="inventory-count-dot"></span>
-        <span id="carCount">2</span> Vehicles Available
+        <span id="carCount">…</span> Vehicles Available
       </div>
       <div class="section-label fade-up" style="animation-delay:0.1s">786 Habibis Auto LLC</div>
       <h1 class="fade-up" style="animation-delay:0.18s">Full Inventory</h1>
@@ -523,7 +530,7 @@
         <div class="more-coming-icon">🚗</div>
         <h3>More Cars Coming Soon</h3>
         <p>New inventory is added regularly. Contact us to be notified when new vehicles arrive.</p>
-        <a href="habibi-auto.html#contact" class="btn-outline-sm">Get Notified</a>
+        <a href="index.html#contact" class="btn-outline-sm">Get Notified</a>
       </div>
     </div>
   </main>
@@ -539,6 +546,9 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
     // ── Hamburger ──
     const hamburger = document.getElementById('hamburger');
@@ -554,83 +564,44 @@
       });
     });
 
-    // ── Default Cars (shown until admin adds/removes) ──
-    const DEFAULT_CARS = [
-      {
-        id: 1,
-        photo: 'elantra.jpg',
-        badge: 'Hot Deal 🔥',
-        badgeType: 'hot',
-        make: 'Hyundai',
-        year: '2025',
-        name: 'Elantra SEL Sedan 4D',
-        specs: [
-          { label: 'Mileage',   value: '17,400 mi'   },
-          { label: 'Color',     value: 'Clean White'  },
-          { label: 'Location',  value: 'Fontana, CA'  },
-          { label: 'Title',     value: 'Salvage'      }
-        ],
-        highlights: ['Excellent Gas Mileage','Modern Safety Features','Smog Done','No Airbags Deployed'],
-        price: '15,500'
-      },
-      {
-        id: 2,
-        photo: 'porsche.jpg',
-        badge: 'Performance Beast',
-        badgeType: 'perf',
-        make: 'Porsche',
-        year: '2014',
-        name: 'Panamera Turbo S Sedan 4D',
-        specs: [
-          { label: 'Engine',     value: '4.8L Twin-Turbo V8' },
-          { label: 'Horsepower', value: '570 HP'             },
-          { label: '0–60 mph',   value: '~3.6 sec'           },
-          { label: 'Title',      value: 'Salvage'            }
-        ],
-        highlights: ['AWD + PDK','Ceramic Brakes','PASM Suspension','Porsche Beverly Hills Serviced'],
-        price: '29,999'
-      }
-    ];
-
-    function getCars() {
-      const stored = localStorage.getItem('habibi_cars');
-      if (stored) return JSON.parse(stored);
-      // First visit — seed defaults
-      localStorage.setItem('habibi_cars', JSON.stringify(DEFAULT_CARS));
-      return DEFAULT_CARS;
-    }
-
     function buildCard(car) {
       const badgeClass = car.badgeType === 'hot' ? 'badge-hot' : 'badge-perf';
       const specsHTML = car.specs.map(s =>
-        `<div class="spec-item"><span class="spec-label">${s.label}</span><span class="spec-value">${s.value}</span></div>`
+        `<div class="spec-item"><span class="spec-label">${esc(s.label)}</span><span class="spec-value">${esc(s.value)}</span></div>`
       ).join('');
-      const tagsHTML = car.highlights.map(h => `<span class="highlight-tag">${h}</span>`).join('');
+      const tagsHTML = car.highlights.map(h => `<span class="highlight-tag">${esc(h)}</span>`).join('');
       return `
         <article class="car-card">
           <div class="card-img">
-            <img src="${car.photo}" alt="${car.make} ${car.name}" />
-            <span class="card-badge ${badgeClass}">${car.badge}</span>
+            <img src="${esc(car.photo)}" alt="${esc(car.make)} ${esc(car.name)}" />
+            <span class="card-badge ${badgeClass}">${esc(car.badge)}</span>
           </div>
           <div class="card-body">
-            <div class="card-make">${car.make} &middot; ${car.year}</div>
-            <h2 class="card-name">${car.name}</h2>
+            <div class="card-make">${esc(car.make)} &middot; ${esc(car.year)}</div>
+            <h2 class="card-name">${esc(car.name)}</h2>
             <div class="card-specs">${specsHTML}</div>
             <div class="card-highlights">${tagsHTML}</div>
             <div class="card-price-row">
-              <div class="card-price">$${car.price}</div>
-              <a href="habibi-auto.html#contact" class="btn-inquire">Inquire</a>
+              <div class="card-price">$${esc(car.price)}</div>
+              <a href="index.html#contact" class="btn-inquire">Inquire</a>
             </div>
           </div>
         </article>`;
     }
 
-    function render() {
-      const cars = getCars();
+    async function render() {
       const grid = document.getElementById('carGrid');
+      let cars;
+      try {
+        cars = await fetchCars();
+      } catch (err) {
+        console.error('Failed to load inventory', err);
+        grid.innerHTML = '<p class="grid-status">Inventory is temporarily unavailable. Please call or message us.</p>';
+        document.getElementById('carCount').textContent = '–';
+        return;
+      }
       grid.innerHTML = cars.map(buildCard).join('');
       document.getElementById('carCount').textContent = cars.length;
-      document.getElementById('moreComing').style.display = cars.length === 0 ? 'block' : 'block';
     }
 
     render();
